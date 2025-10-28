@@ -177,8 +177,8 @@
   </footer>
 
   <script>
-    // Custom slower smooth scroll (0.2 seconds)
-    function smoothScrollTo(targetEl, duration = 200) {
+    // Custom slower smooth scroll (1 seconds)
+    function smoothScrollTo(targetEl, duration = 1000) {
       const start = window.pageYOffset;
       const end = targetEl.getBoundingClientRect().top + window.pageYOffset - 70;
       const distance = end - start;
@@ -200,7 +200,7 @@
         const target = id && document.querySelector(id);
         if (!target) return;
         e.preventDefault();
-        smoothScrollTo(target, 200);
+        smoothScrollTo(target, 1000);
       });
     });
 
