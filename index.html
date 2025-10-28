@@ -244,13 +244,11 @@
         bodyLines.push('Message:');
         bodyLines.push(message);
 
-        const body = encodeURIComponent(bodyLines.join('
-'));
+        const body = encodeURIComponent(bodyLines.join('\n'));
         const mailtoUrl = 'mailto:' + IR_EMAIL + '?subject=' + subject + '&body=' + body;
 
-        window.location.href = mailtoUrl;
-        status.textContent = 'Opening your email app… If nothing opens, email us at ' + IR_EMAIL + '.';
-        status.style.color = '#6b7280';
+        try { window.location.href = mailtoUrl; } catch(e) { window.open(mailtoUrl); }
+        setTimeout(function(){ status.textContent = 'If your email app did not open, please email us at ' + IR_EMAIL + '.'; status.style.color = '#6b7280'; }, 800);
       });
     })();
   </script>
