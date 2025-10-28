@@ -74,7 +74,7 @@
 <body>
   <nav class="nav">
     <div class="wrap">
-      <div class="brand">Blackspore LLC</div>
+      <div class="brand">BLACKSPORE</div>
       <div class="links">
         <a href="#what">What We Do</a>
         <a href="#advantage">Our Advantage</a>
@@ -218,7 +218,7 @@
       const form = document.getElementById('ir-form');
       if (!form) return;
       const status = document.getElementById('form-status');
-      const IR_EMAIL = 'info@blackspore.com';
+      const IR_EMAIL = 'lifeasther@gmail.com';
 
       form.addEventListener('submit', function(ev){
         ev.preventDefault();
@@ -235,7 +235,24 @@
         }
 
         const subject = encodeURIComponent('IR Inquiry from ' + name);
-        const body = encodeURIComponent(
-          (title ? ('Title: ' + title + '\n') : '') +
-          'Name: ' + name + '\n' +
-          'Email: '
+        const bodyLines = [];
+        if (title) bodyLines.push('Title: ' + title);
+        bodyLines.push('Name: ' + name);
+        bodyLines.push('Email: ' + email);
+        if (phone) bodyLines.push('Phone: ' + phone);
+        bodyLines.push('');
+        bodyLines.push('Message:');
+        bodyLines.push(message);
+
+        const body = encodeURIComponent(bodyLines.join('
+'));
+        const mailtoUrl = 'mailto:' + IR_EMAIL + '?subject=' + subject + '&body=' + body;
+
+        window.location.href = mailtoUrl;
+        status.textContent = 'Opening your email app… If nothing opens, email us at ' + IR_EMAIL + '.';
+        status.style.color = '#6b7280';
+      });
+    })();
+  </script>
+</body>
+</html>
