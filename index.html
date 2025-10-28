@@ -170,7 +170,7 @@
           <button type="submit" class="btn primary" style="border:none; cursor:pointer;">Send Message</button>
           <span id="form-status" style="font-size:0.9rem; color: var(--muted);"></span>
         </div>
-        <p style="margin-top:8px; font-size:0.75rem; color:var(--muted);">This form opens your email client to send securely via your own mail provider.</p>
+        <p style="margin-top:8px; font-size:0.75rem; color:var(--muted);">Your message will be submitted to our secure database and our team will contact you shortly.</p>
       </form>
     </div>
   </section>
@@ -213,42 +213,62 @@
       }
     });
 
-    // Simple mailto-based submit handler (no backend required)
+    // Firebase Realtime Database submit handler
     (function(){
       const form = document.getElementById('ir-form');
       if (!form) return;
       const status = document.getElementById('form-status');
-      const IR_EMAIL = 'lifeasther@gmail.com';
+      const submitBtn = form.querySelector('button[type="submit"]');
 
-      form.addEventListener('submit', function(ev){
+      // Your Firebase Realtime Database endpoint (REST API)
+      const DB_URL = 'https://blackspore-cc655-default-rtdb.firebaseio.com/contact_messages.json';
+
+      function setStatus(msg, color){ status.textContent = msg; status.style.color = color; }
+
+      form.addEventListener('submit', async function(ev){
         ev.preventDefault();
-        const title = document.getElementById('title').value.trim();
-        const name = document.getElementById('name').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const message = document.getElementById('message').value.trim();
+        const title = (document.getElementById('title')?.value || '').trim();
+        const name = (document.getElementById('name')?.value || '').trim();
+        const email = (document.getElementById('email')?.value || '').trim();
+        const phone = (document.getElementById('phone')?.value || '').trim();
+        const message = (document.getElementById('message')?.value || '').trim();
 
         if (!name || !email || !message) {
-          status.textContent = 'Please complete the required fields (name, email, message).';
-          status.style.color = '#b91c1c';
+          setStatus('Please complete the required fields (name, email, message).', '#b91c1c');
           return;
         }
 
-        const subject = encodeURIComponent('IR Inquiry from ' + name);
-        const bodyLines = [];
-        if (title) bodyLines.push('Title: ' + title);
-        bodyLines.push('Name: ' + name);
-        bodyLines.push('Email: ' + email);
-        if (phone) bodyLines.push('Phone: ' + phone);
-        bodyLines.push('');
-        bodyLines.push('Message:');
-        bodyLines.push(message);
+        // Disable while sending
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.7';
+        setStatus('Sending…', '#6b7280');
 
-        const body = encodeURIComponent(bodyLines.join('\n'));
-        const mailtoUrl = 'mailto:' + IR_EMAIL + '?subject=' + subject + '&body=' + body;
+        const payload = {
+          title, name, email, phone, message,
+          createdAt: new Date().toISOString(),
+          userAgent: navigator.userAgent || '',
+          page: location.href
+        };
 
-        try { window.location.href = mailtoUrl; } catch(e) { window.open(mailtoUrl); }
-        setTimeout(function(){ status.textContent = 'If your email app did not open, please email us at ' + IR_EMAIL + '.'; status.style.color = '#6b7280'; }, 800);
+        try {
+          const res = await fetch(DB_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) throw new Error('Network response was not ok');
+
+          // Clear form
+          form.reset();
+          setStatus('Thank you — your message has been received.', '#065f46');
+        } catch (err) {
+          console.error(err);
+          setStatus('Sorry, we could not submit your message. Please try again later.', '#b91c1c');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+        }
       });
     })();
   </script>
