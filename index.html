@@ -65,7 +65,7 @@
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes flow { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: auto; }
     section { scroll-margin-top: 80px; }
 
     .nav .links a.active { font-weight: 700; }
@@ -98,10 +98,8 @@
     <p class="section-kicker">We research, construct and execute strategies across public markets, guided by a consistent framework for risk and capital allocation.</p>
     <div class="grid">
       <div class="card"><span class="pill">Systematic</span><h3>Quantitative Trading</h3><p>Signal-driven models across equities, futures and FX with robust research pipelines and live risk controls.</p></div>
-      <div class="card"><span class="pill">Macro</span><h3>Rates & Currencies</h3><p>Macro and relative-value views across sovereign rates, inflation and FX, supported by macroeconomic analysis.</p></div>
       <div class="card"><span class="pill">Equities</span><h3>Market-Neutral L/S</h3><p>Sector-focused fundamental research with market-neutral construction to target alpha independent of beta.</p></div>
-      <div class="card"><span class="pill">Credit</span><h3>Credit & Convertibles</h3><p>Event- and structure-aware positions across cash and derivatives with disciplined downside management.</p></div>
-      <div class="card"><span class="pill">Commodities</span><h3>Energy & Metals</h3><p>Diversified exposures and spread trades across energy and metals, with a focus on liquidity and risk.</p></div>
+      <div class="card"><span class="pill">Event</span><h3>Event Driven</h3><p>Focused on corporate catalysts including mergers, spin-offs, restructurings and special situations with disciplined risk controls.</p></div>
     </div>
   </section>
 
@@ -134,8 +132,7 @@
     <div class="panel">
       <h2 style="margin-bottom:6px;">Get in touch</h2>
       <p style="color:var(--muted); margin-bottom:16px;">For qualified institutional and accredited inquiries.</p>
-      
-      <!-- Contact Form -->
+
       <form id="ir-form" novalidate style="text-align:left; min-width: 280px; max-width: 560px;">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
           <div>
@@ -180,51 +177,40 @@
   </footer>
 
   <script>
-    (function(){
-      const sections = document.querySelectorAll('section[id]');
-      const links = Array.from(document.querySelectorAll('.nav .links a'));
-      const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
-      const obs = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          const id = entry.target.getAttribute('id');
-          const link = map.get(id);
-          if (!link) return;
-          if (entry.isIntersecting) {
-            links.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-          }
-        });
-      }, { rootMargin: '-40% 0px -55% 0px', threshold: 0.01 });
-      sections.forEach(s => obs.observe(s));
-    })();
-
-    // Smooth scroll for hero buttons
-    document.querySelector('.btn.primary').addEventListener('click', function(e){
-      if (this.getAttribute('href') === '#what') {
-        e.preventDefault();
-        document.querySelector('#what').scrollIntoView({behavior: 'smooth'});
+    // Custom slower smooth scroll (2 seconds)
+    function smoothScrollTo(targetEl, duration = 2000) {
+      const start = window.pageYOffset;
+      const end = targetEl.getBoundingClientRect().top + window.pageYOffset - 70;
+      const distance = end - start;
+      let startTime = null;
+      function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
+      function step(ts){
+        if (!startTime) startTime = ts;
+        const progress = Math.min((ts - startTime) / duration, 1);
+        const eased = easeInOutCubic(progress);
+        window.scrollTo(0, start + distance * eased);
+        if (progress < 1) requestAnimationFrame(step);
       }
+      requestAnimationFrame(step);
+    }
+
+    document.querySelectorAll('.nav .links a[href^="#"], header .actions a[href^="#"]').forEach(el => {
+      el.addEventListener('click', e => {
+        const id = el.getAttribute('href');
+        const target = id && document.querySelector(id);
+        if (!target) return;
+        e.preventDefault();
+        smoothScrollTo(target, 2000);
+      });
     });
 
-    document.querySelector('.btn.secondary').addEventListener('click', function(e){
-      if (this.getAttribute('href') === '#contact') {
-        e.preventDefault();
-        document.querySelector('#contact').scrollIntoView({behavior: 'smooth'});
-      }
-    });
-
-    // Firebase Realtime Database submit handler
     (function(){
       const form = document.getElementById('ir-form');
       if (!form) return;
       const status = document.getElementById('form-status');
       const submitBtn = form.querySelector('button[type="submit"]');
-
-      // Your Firebase Realtime Database endpoint (REST API)
       const DB_URL = 'https://blackspore-cc655-default-rtdb.firebaseio.com/contact_messages.json';
-
       function setStatus(msg, color){ status.textContent = msg; status.style.color = color; }
-
       form.addEventListener('submit', async function(ev){
         ev.preventDefault();
         const title = (document.getElementById('title')?.value || '').trim();
@@ -232,38 +218,20 @@
         const email = (document.getElementById('email')?.value || '').trim();
         const phone = (document.getElementById('phone')?.value || '').trim();
         const message = (document.getElementById('message')?.value || '').trim();
-
         if (!name || !email || !message) {
           setStatus('Please complete the required fields (name, email, message).', '#b91c1c');
           return;
         }
-
-        // Disable while sending
         submitBtn.disabled = true;
         submitBtn.style.opacity = '0.7';
         setStatus('Sending…', '#6b7280');
-
-        const payload = {
-          title, name, email, phone, message,
-          createdAt: new Date().toISOString(),
-          userAgent: navigator.userAgent || '',
-          page: location.href
-        };
-
+        const payload = { title, name, email, phone, message, createdAt: new Date().toISOString(), userAgent: navigator.userAgent || '', page: location.href };
         try {
-          const res = await fetch(DB_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
+          const res = await fetch(DB_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
           if (!res.ok) throw new Error('Network response was not ok');
-
-          // Clear form
           form.reset();
           setStatus('Thank you — your message has been received.', '#065f46');
-        } catch (err) {
-          console.error(err);
+        } catch (err) {          console.error(err);
           setStatus('Sorry, we could not submit your message. Please try again later.', '#b91c1c');
         } finally {
           submitBtn.disabled = false;
