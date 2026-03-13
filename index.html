@@ -86,7 +86,7 @@
 
     const SPREADS = {
       single: { name: "Single Card", count: 1, positions: ["Your Message"] },
-      three: { name: "Past \u00b7 Present \u00b7 Future", count: 3, positions: ["Past", "Present", "Future"] },
+      three: { name: "Past · Present · Future", count: 3, positions: ["Past", "Present", "Future"] },
       celtic: { name: "Celtic Cross", count: 5, positions: ["Present Situation", "Challenge", "Foundation", "Near Future", "Potential Outcome"] },
     };
 
@@ -124,11 +124,610 @@
 
     const SUIT_GLYPHS = { Wands: "\u{1F702}", Cups: "\u{1F704}", Swords: "\u{1F701}", Pentacles: "\u{1F703}" };
 
-    function getCardVisual(card) {
-      if (card.arcana === "major") {
-        return CARD_ART[card.name] || { glyph: "\u2727", bg: "linear-gradient(135deg, #0a1a0a, #1a3a2a)" };
+    // COMPREHENSIVE MAJOR ARCANA READINGS
+    const CARD_READINGS = {
+      "The Fool": {
+        upright: {
+          general: "The Fool invites you to trust in the journey ahead, even when the path is shrouded in mist. Leap with faith into the undergrowth; the forest knows your footsteps before you do. New beginnings root themselves in your life now.",
+          past: "Once, you stood at the grove's edge, unburdened and full of possibility. That moment of innocence shaped all that followed—a stepping stone into deeper woods.",
+          present: "You dance between worlds right now, balanced on the knife's edge of choice. The spores whisper: abandon caution just enough to grow.",
+          future: "A new chapter unfolds in the mycelium of time. Trust that the forest's hidden roots will support you through what comes.",
+          situation: "This is a time of new potential, yet uncertainty clings like morning fog. You stand before an open gate.",
+          challenge: "The risk feels real because it is. Moving forward requires releasing the grip of what you know.",
+          foundation: "Your strength rests on the courage to begin, over and over. You are built for beginnings.",
+          outcome: "Through the veil ahead lies transformation. What you sow now will flourish in seasons yet unseen.",
+        },
+        reversed: {
+          general: "Hesitation holds you still. Fear whispers from the undergrowth, and you listen. The spores drift—but do they drift toward you or away?",
+          past: "You once stood frozen at the threshold, watching others pass. That hesitation left its mark.",
+          present: "Recklessness mingles with doubt, creating a paralysis all its own. You feel the pressure to act, yet cannot move.",
+          future: "Caution will soften into wisdom, but only if you learn from stumbling now.",
+          situation: "Naiveté or avoidance obscures the true shape of things. The forest is trying to teach you something.",
+          challenge: "Your own fear is the root system you must untangle. Nothing external blocks your way.",
+          foundation: "You have learned to protect yourself, perhaps too well. That armor now weighs you down.",
+          outcome: "Stagnation beckons if you do not choose growth—even growth that frightens you.",
+        },
+      },
+      "The Magician": {
+        upright: {
+          general: "Power stirs in your hands. The Magician shows you that all the tools you need already dwell within the grove of your being. Manifest what you truly desire.",
+          past: "You discovered your own power once, in a moment when intention became real. That gift remains yours.",
+          present: "Your will is sharp as a blade of grass catching morning dew. Speak your truth; shape your world through conscious choice.",
+          future: "What you build now through focused intention will stand solid as ancient trees. Your creations will endure.",
+          situation: "Energy and possibility converge around you. The threads of the mycelium respond to your touch.",
+          challenge: "Harness this power without losing yourself in it. Intention without wisdom becomes mere ambition.",
+          foundation: "You are resourceful and clever. The forest recognizes a kindred spirit of transformation.",
+          outcome: "Manifestation blooms where you plant intention. Trust your skill.",
+        },
+        reversed: {
+          general: "Your power feels scattered, fragmented like spores on a harsh wind. You possess the gifts but cannot seem to gather them.",
+          past: "Once you believed in your own magic. That belief fractured, and you have not yet glued it whole.",
+          present: "Manipulation or deception clouds your path—either from others or from your own self-betrayal.",
+          future: "Clarity will return, but you must first untangle the webs you have woven.",
+          situation: "Illusion obscures reality. What appears powerful may be hollow. What seems worthless may hold hidden roots.",
+          challenge: "You must reclaim your authentic power, not the false version you show the world.",
+          foundation: "Self-doubt undermines your natural gifts. You doubt yourself more than circumstances warrant.",
+          outcome: "Potential lies dormant. The spell requires your belief to become real.",
+        },
+      },
+      "The High Priestess": {
+        upright: {
+          general: "The veil grows thin. Listen to the whispers beneath the surface, the voice that speaks in symbols and dreams. Your intuition is the ancient mycelium connecting all things.",
+          past: "Silence taught you once. In that stillness, you learned to read what others cannot hear.",
+          present: "Trust what you know without knowing how you know it. The forest speaks in the language of the soul.",
+          future: "Secrets will reveal themselves. Patience will be rewarded with understanding.",
+          situation: "Mystery dwells here, and you are being invited deeper. The undergrowth hides both danger and treasure.",
+          challenge: "Your intellect wars with your intuition. One must yield to the other's wisdom.",
+          foundation: "You have always been able to see what lies beneath. That gift is your true inheritance.",
+          outcome: "Hidden knowledge becomes your guide. Trust the inner knowing.",
+        },
+        reversed: {
+          general: "The door to your intuition has closed. Secrets fester like rot in dead wood. You feel disconnected from the deeper knowing.",
+          past: "Confusion clouded what you once understood clearly. You lost the thread that bound you to deeper truth.",
+          present: "Superficial understanding masquerades as wisdom. You are deceiving yourself about what is really happening.",
+          future: "Clarity must come through facing what you have hidden, even from yourself.",
+          situation: "What lies beneath the surface remains inaccessible to you now. Patience is required.",
+          challenge: "You have become too dependent on what you can see and touch. The invisible realm calls to you.",
+          foundation: "Your inner knowledge sleeps. It waits for you to return and wake it.",
+          outcome: "Truth emerges, but only if you stop running from it.",
+        },
+      },
+      "The Empress": {
+        upright: {
+          general: "Abundance flows through you like sap through spring branches. The Empress celebrates creation, nurture, and the fertile ground of your own becoming. Grow boldly.",
+          past: "You were once held, cherished, or you learned to cherish yourself. That warmth still lives in your roots.",
+          present: "Your creative power is at its height. What you birth now—projects, relationships, growth—will flourish.",
+          future: "Abundance will multiply. Your generosity returns to you tenfold.",
+          situation: "Fertility abounds in all forms. This is a time of expansion and creation.",
+          challenge: "Nurture without losing yourself. Generosity without depletion is an art to master.",
+          foundation: "You are naturally abundant, naturally creative. The forest bends toward your warmth.",
+          outcome: "What you nurture will grow. Your creation will outlive you.",
+        },
+        reversed: {
+          general: "Emptiness echoes where there should be fullness. You feel drained, unable to give or grow. The grove grows cold around you.",
+          past: "You were once depleted or smothered. That wound shapes how you approach abundance now.",
+          present: "Barrenness haunts you, whether literal or symbolic. Creation feels blocked.",
+          future: "Renewal comes through rest and reclamation of what is yours alone.",
+          situation: "Growth is stalled. Something in the soil is poisoned or depleted.",
+          challenge: "You must learn to receive as well as give. The cycle is broken in one direction.",
+          foundation: "Your sense of your own worth has been compromised. Rebuild it slowly.",
+          outcome: "Restoration is possible, but it requires patience with yourself.",
+        },
+      },
+      "The Emperor": {
+        upright: {
+          general: "Authority rests upon your shoulders—whether over others or over yourself. The Emperor brings structure, clarity, and the power to command your own life with discipline.",
+          past: "You learned once what it means to stand firm, to make hard decisions. That strength is still yours.",
+          present: "Leadership calls to you now. Claim your power with confidence. The forest responds to a steady hand.",
+          future: "Stability you build now will shelter you for years to come.",
+          situation: "Order and structure are needed here. You have the wisdom and strength to provide them.",
+          challenge: "Authority can become tyranny if you forget compassion. Power requires restraint.",
+          foundation: "You are built for command. The question is whether you command with wisdom or ego.",
+          outcome: "What you establish will endure because it rests on solid ground.",
+        },
+        reversed: {
+          general: "Authority has collapsed or become oppressive. You either yield too much power to others or wield it with a closed fist.",
+          past: "Rigidity or domination marked that time. You learned control through fear.",
+          present: "Chaos or submission defines this moment. You have either lost your footing or surrendered it.",
+          future: "A return to balance requires releasing old patterns of control.",
+          situation: "Systems are crumbling or being imposed without wisdom. The structure is unsound.",
+          challenge: "You must reclaim your power without becoming what you fear.",
+          foundation: "Your sense of authority has been shaken or corrupted. Rebuild it on truth.",
+          outcome: "Instability persists until you address the root—either in yourself or your circumstances.",
+        },
+      },
+      "The Hierophant": {
+        upright: {
+          general: "Tradition and wisdom converge. The Hierophant speaks of teachings passed down through the mycelium of generations. Honor what has been proven, yet remain open.",
+          past: "You learned from elders once. Those teachings shaped your values and your path.",
+          present: "Guidance from tradition, mentors, or your own inner elder steadies you now.",
+          future: "What you learn now becomes a gift you pass forward.",
+          situation: "Ritual, structure, and shared values matter deeply here. The forest's ancient ways offer clarity.",
+          challenge: "Tradition can imprison as well as protect. Know when to honor it and when to question it.",
+          foundation: "You have roots in the teachings of those who came before. That inheritance strengthens you.",
+          outcome: "By honoring what is sacred, you find your own path.",
+        },
+        reversed: {
+          general: "You rebel against tradition, and perhaps rightly so. Yet breaking free can leave you untethered. The old ways no longer serve; forge new ones.",
+          past: "You rejected what was given to you. That refusal created both freedom and exile.",
+          present: "Conventions feel like chains. You are finding your own way, unguided.",
+          future: "A new approach will work better than the old, but it requires care to build.",
+          situation: "The old rules no longer apply here. Trust yourself to write new ones.",
+          challenge: "Freedom without any structure becomes chaos. Some roots still matter.",
+          foundation: "You are a pioneer, but even pioneers need compass and map.",
+          outcome: "Innovation succeeds when it honors the wisdom it replaces.",
+        },
+      },
+      "The Lovers": {
+        upright: {
+          general: "Love, harmony, and deep connection bloom. The Lovers speak of union—with another, with yourself, with your deepest truth. This is sacred alignment.",
+          past: "You experienced real connection once, a moment of perfect understanding. That love remains real.",
+          present: "A significant relationship or choice calls for your authentic heart. Say yes or no with full presence.",
+          future: "Connection will deepen. What you share now will grow roots and bear fruit.",
+          situation: "This is about choice and commitment. The heart must have its say.",
+          challenge: "Vulnerability is the price of true union. Can you pay it?",
+          foundation: "You are made for connection. Your capacity to love is your deepest power.",
+          outcome: "Through true connection, you become more fully yourself.",
+        },
+        reversed: {
+          general: "Misalignment fractures the bonds that matter. You are out of sync with yourself or another. The bridge between hearts has weakened.",
+          past: "A love once broken, a choice once wrong. That separation marked you.",
+          present: "Distance or conflict haunts your closest relationships. Something essential is missing.",
+          future: "Healing requires honesty about what is broken and willingness to repair it.",
+          situation: "Disharmony prevails. The two cannot become one until both are willing.",
+          challenge: "You must choose: fight for the connection or release it with grace.",
+          foundation: "You doubt your own worth in love. That doubt is the root of the problem.",
+          outcome: "Separation may be the kindest path, or recommitment with eyes open.",
+        },
+      },
+      "The Chariot": {
+        upright: {
+          general: "Victory lies ahead, but only if you maintain control and direction. The Chariot shows you charging forward with will and determination. The reins are in your capable hands.",
+          past: "You conquered something once through sheer will and focus. That victory shaped your confidence.",
+          present: "Forward motion is possible now. Harness your inner strength and drive toward what matters most.",
+          future: "Success comes to those who refuse to be stopped. You will triumph.",
+          situation: "Momentum is building. This is the time to move decisively.",
+          challenge: "Willpower without wisdom becomes recklessness. Keep the reins tight.",
+          foundation: "You have always had the strength to persevere. Trust it now.",
+          outcome: "Through determination, you cross the finish line.",
+        },
+        reversed: {
+          general: "The wheels spin but do not move you forward. You lack direction or the will to pursue it. Control has slipped from your grasp.",
+          past: "You lost momentum once. The habit of stopped motion has lingered.",
+          present: "Conflict or confusion prevents forward motion. You are pulling in different directions.",
+          future: "Direction and renewed will must be found before progress resumes.",
+          situation: "Stalled progress. The path ahead is unclear, or your feet refuse to move.",
+          challenge: "You must reclaim your inner authority and decide where you truly want to go.",
+          foundation: "Your sense of your own power has been undermined. Rebuild your confidence.",
+          outcome: "Movement returns only when you know what you are moving toward.",
+        },
+      },
+      "Strength": {
+        upright: {
+          general: "True strength is gentle but unbreakable—like the roots of ancient trees. Strength shows you that power lies not in force but in patience and inner calm.",
+          past: "You endured something difficult and emerged whole. That resilience is your greatest gift.",
+          present: "You possess the courage to face what frightens you. Inner strength flows through you now.",
+          future: "What you overcome now will make you unshakeable.",
+          situation: "This requires patience and compassion, not aggression. The gentle touch succeeds here.",
+          challenge: "Prove your strength not through domination but through understanding.",
+          foundation: "You are far stronger than you know. The forest recognizes your unbreakable spirit.",
+          outcome: "Through patient courage, you tame the wild and claim your power.",
+        },
+        reversed: {
+          general: "Doubt erodes your foundation. You feel weak, perhaps defeated. The inner strength you need remains locked away.",
+          past: "You were overwhelmed once and never fully recovered. That weakness haunts you.",
+          present: "Self-doubt paralyzes you. You question your own resilience.",
+          future: "Strength must be reclaimed through facing your fears directly.",
+          situation: "This challenge seems impossible because you have lost faith in yourself.",
+          challenge: "You must confront the voice inside that tells you that you are not enough.",
+          foundation: "Your sense of your own strength has fractured. Repair begins with self-compassion.",
+          outcome: "Only by standing in your own power will you find the way through.",
+        },
+      },
+      "The Hermit": {
+        upright: {
+          general: "The Hermit calls you to retreat into the deepest grove, into your own silence and solitude. Here, in the dark soil, you will find the wisdom that lights your path.",
+          past: "You once retreated and returned enlightened. That quest for inner truth changed everything.",
+          present: "Solitude serves you now. Listen to the whisper within. The forest asks you to be still.",
+          future: "What you discover in silence will guide you for years.",
+          situation: "This is a time for introspection, not action. Look inward with gentle honesty.",
+          challenge: "Isolation can become imprisonment if you linger too long. Know when to emerge.",
+          foundation: "You have always had access to your own deepest knowing. Trust it.",
+          outcome: "Through inner work, you become the guide others need.",
+        },
+        reversed: {
+          general: "Isolation has become loneliness. You hide not from wisdom but from fear. The forest feels cold and confining.",
+          past: "Solitude twisted into alienation. You lost touch with yourself and others.",
+          present: "Withdrawal is preventing connection. You are too alone with your pain.",
+          future: "Connection must be sought, or the loneliness will only deepen.",
+          situation: "You are cut off from help, from community, from light.",
+          challenge: "You must find the courage to return to the world, carrying what you learned.",
+          foundation: "You have forgotten how to be with others. The memory can return.",
+          outcome: "Healing requires stepping out of the cave and into community.",
+        },
+      },
+      "Wheel of Fortune": {
+        upright: {
+          general: "The wheel turns in your favor. What was once hidden rises to the surface; what was high descends. Fortune smiles now. Trust the cycles of the mycelium.",
+          past: "The wheel turned for you once. That luck created what you have now.",
+          present: "Good fortune flows your way. The universe aligns with your efforts.",
+          future: "Luck and destiny converge. The wheel carries you upward.",
+          situation: "Change brings opportunity. The spores scatter and land in fertile ground.",
+          challenge: "Success can be fleeting. Do not hold too tightly to what fortune brings.",
+          foundation: "You understand that all things cycle. That wisdom steadies you.",
+          outcome: "The wheel rises toward your greatest hopes.",
+        },
+        reversed: {
+          general: "The wheel turns downward, and resistance only spins it faster. You fight against change itself. Let go and the wheel will level again.",
+          past: "Bad luck or poor timing marked that season. It has shaped your caution now.",
+          present: "Resistance to change keeps you stuck. The wheel turns whether you accept it or not.",
+          future: "Acceptance of change is the only true luck.",
+          situation: "Cycles are shifting. What once worked no longer does.",
+          challenge: "You must surrender control and trust the larger pattern.",
+          foundation: "You have experienced enough cycles to know that this, too, will pass.",
+          outcome: "Resistance ends when you accept the turning wheel.",
+        },
+      },
+      "Justice": {
+        upright: {
+          general: "Truth balances on a knife's edge, and Justice weighs both sides with perfect clarity. What is owed will be paid. What is true will be revealed.",
+          past: "You were treated fairly once, or you were not—and that shaped your sense of right and wrong.",
+          present: "Honesty is required. Truth emerges now, unavoidable and clear.",
+          future: "What you deserve will be given. The scales tip in your favor.",
+          situation: "Justice prevails here. What is balanced is justice; what is unbalanced cannot stand.",
+          challenge: "You must be honest about your own role in what has transpired.",
+          foundation: "You have a strong sense of right and wrong. That moral compass is true.",
+          outcome: "Truth and fairness triumph. You are vindicated.",
+        },
+        reversed: {
+          general: "Injustice festers. Truth is suppressed or twisted. The scales tip unfairly, and accountability evades everyone.",
+          past: "You were wronged and that wound never healed. Justice was denied.",
+          present: "Dishonesty clouds judgment. Someone is being treated unfairly—perhaps yourself.",
+          future: "Accountability must be faced before balance returns.",
+          situation: "Unfairness prevails. The truth is buried beneath lies.",
+          challenge: "You must speak the truth even when it costs you.",
+          foundation: "Your sense of justice has been wounded. Trust it to heal.",
+          outcome: "Injustice continues until someone stands for truth.",
+        },
+      },
+      "The Hanged Man": {
+        upright: {
+          general: "Surrender brings a new perspective. The Hanged Man hangs suspended between worlds, seeing all from his inverted perch. Let go of what you think you know.",
+          past: "You surrendered something once and discovered freedom in that release.",
+          present: "Yield to this moment. Release your resistance. A new viewpoint awaits if you pause.",
+          future: "What appears as loss becomes a gift. Trust the inversion.",
+          situation: "This requires a shift in perspective. What you see from this angle is truth.",
+          challenge: "Letting go feels like death because, in a way, it is. Be still and wait.",
+          foundation: "You understand that sometimes we must fall to rise transformed.",
+          outcome: "Through surrender, you see what was always there.",
+        },
+        reversed: {
+          general: "You resist the suspension, kick against the ropes. Indecision and refusal keep you spinning, unable to move forward.",
+          past: "You could not let go when the time came. That rigidity carried forward.",
+          present: "Stalling prevents transformation. You are frozen between choosing and refusing.",
+          future: "Commitment to a decision, any decision, will break the spell.",
+          situation: "Nothing can move until you release what you cling to.",
+          challenge: "You must decide: let go, or acknowledge that you choose to stay bound.",
+          foundation: "You fear that surrender means defeat. It does not.",
+          outcome: "Momentum returns only after sacrifice.",
+        },
+      },
+      "Death": {
+        upright: {
+          general: "An ending clears the path for new growth. Death is not destruction but transformation—the necessary decay that feeds the mycelium. Something dies so that something else can live.",
+          past: "You shed a skin once. That old self remains gone, and you became someone new.",
+          present: "An ending is here, whether you welcome it or not. Release what was, and embrace what will be.",
+          future: "From this ending, new life takes root. Trust the process.",
+          situation: "Transformation requires this ending. The forest decomposes the old to feed the new.",
+          challenge: "Grief accompanies all true ending. Allow yourself to feel it.",
+          foundation: "You have always known that change is the only constant. This is simply change.",
+          outcome: "What emerges from this death will be stronger than what came before.",
+        },
+        reversed: {
+          general: "You resist ending, cling to what is dying. Decay happens anyway; you simply suffer it. Stagnation results from refusal to move forward.",
+          past: "You refused to accept an ending once. That resistance left you trapped.",
+          present: "The ending you fear has already begun. Fighting it makes it worse.",
+          future: "Acceptance, when it comes, will be your salvation.",
+          situation: "Stagnation is the shadow of refused death. Nothing new can grow.",
+          challenge: "You must grieve what is gone and release it consciously.",
+          foundation: "Change terrifies you, but it is the only reliable thing.",
+          outcome: "Renewal cannot come until you finally let go.",
+        },
+      },
+      "Temperance": {
+        upright: {
+          general: "Balance pours from vessel to vessel, mixing fire and water, self and other. Temperance brings harmony through moderation and skillful blending.",
+          past: "You once found balance and walked a clear, centered path.",
+          present: "Harmony is possible if you blend rather than push. Patience and moderation guide you.",
+          future: "What you balance now will serve you for a lifetime.",
+          situation: "This requires the middle path. Extremes fail here; balance succeeds.",
+          challenge: "Find the sweet spot between your needs and another's. Neither dominates.",
+          foundation: "You have the wisdom to know when enough is enough.",
+          outcome: "Through blending of opposites, you create something whole.",
+        },
+        reversed: {
+          general: "Excess tips the scales. You are out of balance—too much of one thing, too little of another. Moderation feels impossible.",
+          past: "You swung too far once. That imbalance left its mark.",
+          present: "Extremism in any form blocks your path. You must find the center again.",
+          future: "Balance can return, but you must consciously choose it.",
+          situation: "One element overwhelms the others. The brew is spoiled.",
+          challenge: "You must discipline yourself to pursue the middle way.",
+          foundation: "You know, deep down, what balance feels like. Return to it.",
+          outcome: "Harmony returns only through deliberate rebalancing.",
+        },
+      },
+      "The Devil": {
+        upright: {
+          general: "The Devil shows you what binds you—habit, desire, fear, obsession. These chains are real but not unbreakable. Name what enslaves you, and you are halfway free.",
+          past: "You were bound once by something you thought you wanted.",
+          present: "Face what holds you captive. Material desires, dark patterns, old wounds—see them clearly.",
+          future: "By acknowledging your bondage, you prepare for liberation.",
+          situation: "Something here is a trap dressed as pleasure. Discern what.",
+          challenge: "You must see the chains as chains, not as safety.",
+          foundation: "You understand temptation and weakness. That understanding is your key.",
+          outcome: "Awareness of bondage is the first step toward freedom.",
+        },
+        reversed: {
+          general: "The chains fall away. You reclaim power you thought was lost. Freedom, however difficult, becomes possible.",
+          past: "You broke free from something that had bound you.",
+          present: "Liberation is at hand. The bonds are loosening. Step toward your freedom.",
+          future: "What you claimed back from the Devil will make you whole.",
+          situation: "Escape is possible if you move now. The door has cracked open.",
+          challenge: "Freedom can feel terrifying. Walk toward it anyway.",
+          foundation: "You are stronger than your demons. That strength is real.",
+          outcome: "By releasing your grip on what binds you, you find yourself again.",
+        },
+      },
+      "The Tower": {
+        upright: {
+          general: "The Tower crumbles. Sudden, violent change tears through your world. But destruction clears away the false. From these ruins, truth emerges, raw and real.",
+          past: "Everything fell apart once. You survived, and what remains is genuine.",
+          present: "Upheaval is here. Release what cannot stand. The collapse is necessary.",
+          future: "What you rebuild will be stronger because it rests on truth.",
+          situation: "Illusions shatter. The foundation was always flawed.",
+          challenge: "Surrender to the collapse. Resist and you will only break with it.",
+          foundation: "You have weathered destruction before and found strength in the rubble.",
+          outcome: "From absolute ruin comes absolute clarity.",
+        },
+        reversed: {
+          general: "Disaster is delayed but not prevented. You sense the tremor coming and cling to what is shaking. The longer you wait, the harder the fall.",
+          past: "You avoided disaster once through luck or perfect timing.",
+          present: "The collapse is being postponed by false hope or distraction.",
+          future: "The reckoning will come. Prepare for it now.",
+          situation: "Avoidance prevents necessary destruction. What should fall still stands.",
+          challenge: "You must accept that some towers cannot be saved. Let them go.",
+          foundation: "You are stronger than your fear of loss.",
+          outcome: "When the tower finally falls, at least you will be ready.",
+        },
+      },
+      "The Star": {
+        upright: {
+          general: "Hope blooms like bioluminescent fungi in the deepest dark. The Star promises that light returns. What you long for is possible. Trust in renewal.",
+          past: "You held onto hope once when hope seemed foolish. That hope was rewarded.",
+          present: "Your guiding light is clear. Follow it. Renewal is coming.",
+          future: "What you've dreamed of will manifest. The star does not lie.",
+          situation: "Hope is not naive here; it is realistic and grounded.",
+          challenge: "Keep your eyes on the light, even when the path darkens.",
+          foundation: "Your ability to believe in better times is your salvation.",
+          outcome: "The light you follow leads home.",
+        },
+        reversed: {
+          general: "The light has gone out, and you stumble in darkness. Despair whispers. But the star still shines; you have simply forgotten to look.",
+          past: "You lost faith once and have not recovered it.",
+          present: "Hopelessness clouds your vision. The light is still there.",
+          future: "Hope returns only if you stop fighting the darkness and look upward.",
+          situation: "Despair seems justified by circumstances, but it is a choice.",
+          challenge: "Reconnect with what matters. The star will guide you home.",
+          foundation: "You have hope in you still. It is dormant, not dead.",
+          outcome: "Faith, however small, will light the way.",
+        },
+      },
+      "The Moon": {
+        upright: {
+          general: "The Moon illuminates what is hidden beneath the surface—dreams, fears, intuition, illusions. Trust the darkness to teach you what daylight never could.",
+          past: "You journeyed through the dark wood once and found wisdom there.",
+          present: "What you fear, you can face. What you dream, you can understand. The Moon shows truth wrapped in symbol.",
+          future: "Clarity comes from understanding, not from avoiding, the shadow.",
+          situation: "Mystery and illusion intertwine. Look closer to separate them.",
+          challenge: "Your fears are real but not as large as they seem in moonlight. Face them.",
+          foundation: "You understand that not all truth is rational. Trust the deeper knowing.",
+          outcome: "Through facing the dark, you find your way to light.",
+        },
+        reversed: {
+          general: "The fog lifts. Illusion dissolves. What you feared to see now stands revealed, and you are relieved by the clarity.",
+          past: "Confusion was cleared once, and you never forgot the gift of that clarity.",
+          present: "Truth emerges. The veil thins. What was hidden becomes knowable.",
+          future: "Clarity will guide all your future steps.",
+          situation: "Misunderstanding resolves. The path forward becomes obvious.",
+          challenge: "Speak the truth you have discovered. Others need to hear it.",
+          foundation: "Your intuition was right all along. Trust it.",
+          outcome: "In the light of revealed truth, you move forward with confidence.",
+        },
+      },
+      "The Sun": {
+        upright: {
+          general: "The Sun shines on you without shadow or doubt. Joy, success, vitality—these are your birthright now. The clouds part. You are fully seen and fully alive.",
+          past: "You walked in sunlight once, and it made you whole.",
+          present: "Warmth and light surround you. You are radiant and alive.",
+          future: "Success and happiness are assured. The Sun does not fail.",
+          situation: "This is clarity and joy. Celebrate and grow in it.",
+          challenge: "Let yourself be fully happy. You deserve it.",
+          foundation: "Your basic nature is bright and good. Remember it.",
+          outcome: "What you have sought is given freely now.",
+        },
+        reversed: {
+          general: "The clouds obscure the Sun, and warmth is blocked. Joy feels out of reach. This shadow will pass, but for now, you dwell in temporary darkness.",
+          past: "Sadness clouded a time that should have been bright.",
+          present: "Joy seems distant. You move through the world without its warmth.",
+          future: "The cloud clears. Sunlight returns when you are ready.",
+          situation: "This is temporary. The Sun is still there, still shining.",
+          challenge: "Find the small lights even in the shadow time.",
+          foundation: "You know what sunlight feels like. Hold that memory.",
+          outcome: "Clarity and warmth return when the obstacle dissolves.",
+        },
+      },
+      "Judgement": {
+        upright: {
+          general: "A call sounds through the forest, and you must answer. Judgement brings reckoning, renewal, and the chance to be reborn. Stand and account for yourself—then step into what is next.",
+          past: "You were judged once and either rose to meet it or fell. That defining moment shaped you.",
+          present: "You are called to awaken to your higher self. Answer the call.",
+          future: "Rebirth awaits those who heed the summons.",
+          situation: "This is the moment of assessment. You are being weighed and found true—or shown where you fall short.",
+          challenge: "Be honest about where you stand. Growth requires that clarity.",
+          foundation: "You have an inner judge that never lies. Listen to it.",
+          outcome: "Through honest reckoning, you become what you are meant to be.",
+        },
+        reversed: {
+          general: "The call goes unanswered. You avoid the reckoning, refuse the judgment. But avoidance is its own form of judgment—one that binds you to the past.",
+          past: "You were called once and did not respond. That refusal carries forward.",
+          present: "You resist the transformation being offered. The moment passes while you hesitate.",
+          future: "Another call will come. This time, answer it.",
+          situation: "Self-examination is being avoided. The forest demands you look.",
+          challenge: "You must stop hiding from yourself and from the truth.",
+          foundation: "You have doubt in your own worth. That doubt must be addressed.",
+          outcome: "Rebirth is possible, but only if you accept the judgment and move forward.",
+        },
+      },
+      "The World": {
+        upright: {
+          general: "Completion. Integration. The circle closes and you stand whole, having journeyed through all the mysteries. The World shows you fulfillment, accomplishment, and the promise of new cycles to come.",
+          past: "Something was completed once, and that wholeness still dwells in you.",
+          present: "You are approaching the end of a long journey. You will reach it.",
+          future: "What you finish now will echo through eternity.",
+          situation: "Closure is near. The cycle completes itself.",
+          challenge: "Finish what you have started. Do not stop at the threshold.",
+          foundation: "You have come so far. The final steps are within reach.",
+          outcome: "Completion brings the gift of beginning again, wiser and whole.",
+        },
+        reversed: {
+          general: "The circle remains unclosed. You are caught between ending and beginning, unable to move forward into the next cycle. Completion requires what you have not yet done.",
+          past: "Something was left unfinished. That incompleteness haunts the present.",
+          present: "You are stuck on the threshold. Something prevents you from stepping through.",
+          future: "Completion comes only when you address what is unfinished.",
+          situation: "The cycle cannot turn until this chapter is written to the end.",
+          challenge: "You must identify and complete what has been left hanging.",
+          foundation: "You have the strength to finish. Gather it and push through.",
+          outcome: "The new cycle begins only when you release the old.",
+        },
+      },
+    };
+
+    // MINOR ARCANA TEMPLATE SYSTEM
+    const MINOR_READINGS = {
+      Wands: {
+        general: "passion, creativity, action",
+        element: "Fire",
+        past_templates: ["Fire once burned bright in your life, igniting your passion.", "Your creative spark was kindled long ago.", "Action and courage moved you forward then."],
+        present_templates: ["Fire flows through you now, eager for expression.", "Your creative energy seeks an outlet.", "The spark of passion burns in your chest."],
+        future_templates: ["Your passion will ignite what comes next.", "Fire will clear away what no longer serves you.", "Creative action will shape your destiny."],
+        challenge_templates: ["Channel this fire without burning yourself.", "Let creativity flow without forcing it.", "Action without wisdom becomes recklessness."],
+      },
+      Cups: {
+        general: "emotion, connection, intuition",
+        element: "Water",
+        past_templates: ["Love or loss flowed through you once, teaching you what matters.", "Your heart was opened or broken long ago.", "Emotion shaped what you became."],
+        present_templates: ["Your heart speaks clearly now if you listen.", "Connection and feeling flow around you.", "Intuition whispers its gentle guidance."],
+        future_templates: ["Love or meaningful connection awaits.", "Your emotions will lead you home.", "The heart's wisdom will guide you forward."],
+        challenge_templates: ["Feel deeply without drowning in feeling.", "Let others in without losing yourself.", "Trust emotion and intellect together."],
+      },
+      Swords: {
+        general: "truth, intellect, conflict",
+        element: "Air",
+        past_templates: ["Truth cut through your world once, whether welcome or not.", "Your mind was your weapon and your shield.", "Clear thought once freed you."],
+        present_templates: ["Truth is the only path forward.", "Your intellect is sharp as a blade.", "Clarity about what is real is needed now."],
+        future_templates: ["Truth will set you free.", "Clear thinking will solve what seems impossible.", "Your mind will become your greatest ally."],
+        challenge_templates: ["Wield the sword of truth with compassion.", "Intellect without heart becomes cruelty.", "Clarity must be balanced with kindness."],
+      },
+      Pentacles: {
+        general: "material, practical, grounding",
+        element: "Earth",
+        past_templates: ["The earth held you once, grounding and stabilizing you.", "Practical work shaped your security.", "Material concerns taught you resilience."],
+        present_templates: ["Stability and practical work matter deeply now.", "The earth provides what you need.", "Grounded action brings real results."],
+        future_templates: ["Material security grows from what you plant now.", "The earth will provide in abundance.", "Practical wisdom brings lasting success."],
+        challenge_templates: ["Do not sacrifice meaning for security.", "Material gain without purpose becomes empty.", "Ground yourself without losing your wings."],
+      },
+    };
+
+    function getMinorReading(card, reversed, positionType) {
+      const suitData = MINOR_READINGS[card.suit];
+      const templates = {
+        past: suitData.past_templates,
+        present: suitData.present_templates,
+        future: suitData.future_templates,
+        situation: suitData.present_templates,
+        challenge: suitData.challenge_templates,
+        foundation: suitData.present_templates,
+        outcome: suitData.future_templates,
+      };
+      const chosen = templates[positionType] || suitData.present_templates;
+      const text = chosen[Math.floor(Math.random() * chosen.length)];
+      if (reversed) {
+        return text.replace(/burns/, "smolders").replace(/flows/, "stagnates").replace(/speaks/, "whispers weakly").replace(/matters/, "seems hollow");
       }
-      return { glyph: SUIT_GLYPHS[card.suit] || "\u2727", bg: SUIT_COLORS[card.suit] };
+      return text;
+    }
+
+    function generateReading(cards, reversals, spreadInfo, question) {
+      const positionNames = spreadInfo.positions;
+      let reading = "";
+
+      if (question) {
+        reading += `You asked: "${question}" The spores have answered.\n\n`;
+      }
+
+      const cardReadings = cards.map((card, i) => {
+        const pos = positionNames[i];
+        const rev = reversals[i];
+        let posKey = pos.toLowerCase();
+        if (posKey.includes("past")) posKey = "past";
+        else if (posKey.includes("present")) posKey = "present";
+        else if (posKey.includes("future")) posKey = "future";
+        else if (posKey.includes("situation")) posKey = "situation";
+        else if (posKey.includes("challenge")) posKey = "challenge";
+        else if (posKey.includes("foundation")) posKey = "foundation";
+        else if (posKey.includes("outcome")) posKey = "outcome";
+        else posKey = "general";
+
+        let text = "";
+        if (card.arcana === "major") {
+          text = CARD_READINGS[card.name]?.[rev ? "reversed" : "upright"]?.[posKey] || "The ancient wisdom dwells here.";
+        } else {
+          text = getMinorReading(card, rev, posKey);
+        }
+
+        return {
+          card,
+          reversed: rev,
+          position: pos,
+          reading: text,
+        };
+      });
+
+      const baseReading = cardReadings.map(cr => {
+        let line = `${cr.position}: ${cr.card.name}`;
+        if (cr.reversed) line += " (reversed)";
+        line += ". " + cr.reading;
+        return line;
+      }).join("\n\n");
+
+      reading += baseReading;
+
+      if (cards.length >= 2) {
+        reading += "\n\n";
+        const weavingLines = [
+          "The threads of the mycelium bind these cards together, showing you a path.",
+          "Deep beneath the surface, these cards speak a single truth: you are becoming what you are meant to be.",
+          "The forest whispers its message through these cards, asking you to listen not just with your mind, but with your whole being.",
+          "These cards form a map of your inner landscape. Follow it with courage.",
+        ];
+        reading += weavingLines[Math.floor(Math.random() * weavingLines.length)];
+      }
+
+      if (question) {
+        reading += "\n\nReturn to your question. The answer lives not in the cards, but in what they have stirred within you.";
+      }
+
+      return reading;
     }
 
     function Spores() {
@@ -279,6 +878,13 @@
       );
     }
 
+    function getCardVisual(card) {
+      if (card.arcana === "major") {
+        return CARD_ART[card.name] || { glyph: "\u2727", bg: "linear-gradient(135deg, #0a1a0a, #1a3a2a)" };
+      }
+      return { glyph: SUIT_GLYPHS[card.suit] || "\u2727", bg: SUIT_COLORS[card.suit] };
+    }
+
     function TypingText({ text }) {
       const [displayed, setDisplayed] = useState("");
       const idx = useRef(0);
@@ -332,52 +938,18 @@
         setTimeout(() => getReading(cards, revs), 2000);
       };
 
-      const getReading = async (cards, revs) => {
+      const getReading = (cards, revs) => {
         setLoading(true);
         const spreadInfo = SPREADS[spread];
-        const cardDescriptions = cards.map((c, i) => {
-          const pos = spreadInfo.positions[i];
-          const rev = revs[i];
-          let desc = `Position "${pos}": ${c.name}`;
-          if (rev) desc += " (Reversed)";
-          if (c.arcana === "major") {
-            desc += ` \u2014 Upright: ${c.keywords}`;
-            if (c.reversed) desc += `; Reversed: ${c.reversed}`;
-          } else {
-            desc += ` \u2014 Suit of ${c.suit} (${c.element}/${c.domain})`;
+        setTimeout(() => {
+          try {
+            const text = generateReading(cards, revs, spreadInfo, question);
+            setReading(text);
+          } catch (err) {
+            setError("The forest grows silent. The spirits withdraw. Please try again.");
           }
-          return desc;
-        }).join("\n");
-
-        const prompt = `You are a wise, intuitive tarot reader with deep knowledge of the Rider-Waite tradition. The querent has asked: "${question || 'No specific question \u2014 provide general guidance.'}"
-
-Spread: ${spreadInfo.name}
-Cards drawn:
-${cardDescriptions}
-
-Provide a rich, insightful reading. For each card:
-1. Briefly describe the card's energy and symbolism in this position
-2. Connect it to the querent's question or life situation
-
-Then weave all cards together into a cohesive narrative with practical wisdom. Be warm, encouraging, and authentic \u2014 not generic. Speak directly to the querent using "you." Keep it around 300-400 words. Don't use markdown headers or bullets \u2014 write in flowing prose paragraphs.`;
-
-        try {
-          const response = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
-              max_tokens: 1000,
-              messages: [{ role: "user", content: prompt }],
-            }),
-          });
-          const data = await response.json();
-          const text = data.content?.map(b => b.text || "").join("") || "The cards remain silent for now. Please try again.";
-          setReading(text);
-        } catch (err) {
-          setError("The forest grows silent. The spirits withdraw. Please try again.");
-        }
-        setLoading(false);
+          setLoading(false);
+        }, 1500);
       };
 
       const reset = () => {
