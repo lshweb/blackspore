@@ -1,0 +1,651 @@
+import { useState, useEffect, useRef } from "react";
+
+const MAJOR_ARCANA = [
+  { name: "The Fool", numeral: "0", keywords: "beginnings, innocence, spontaneity", reversed: "recklessness, fear, holding back" },
+  { name: "The Magician", numeral: "I", keywords: "willpower, creation, manifestation", reversed: "manipulation, illusions, untapped potential" },
+  { name: "The High Priestess", numeral: "II", keywords: "intuition, mystery, inner knowledge", reversed: "secrets, disconnection, withdrawal" },
+  { name: "The Empress", numeral: "III", keywords: "abundance, nurturing, fertility", reversed: "dependence, smothering, emptiness" },
+  { name: "The Emperor", numeral: "IV", keywords: "authority, structure, stability", reversed: "tyranny, rigidity, loss of control" },
+  { name: "The Hierophant", numeral: "V", keywords: "tradition, guidance, conformity", reversed: "rebellion, subversion, new approaches" },
+  { name: "The Lovers", numeral: "VI", keywords: "love, harmony, relationships", reversed: "disharmony, imbalance, misalignment" },
+  { name: "The Chariot", numeral: "VII", keywords: "determination, willpower, triumph", reversed: "lack of direction, aggression, defeat" },
+  { name: "Strength", numeral: "VIII", keywords: "courage, patience, inner strength", reversed: "self-doubt, weakness, insecurity" },
+  { name: "The Hermit", numeral: "IX", keywords: "soul-searching, introspection, solitude", reversed: "isolation, loneliness, withdrawal" },
+  { name: "Wheel of Fortune", numeral: "X", keywords: "change, cycles, destiny", reversed: "bad luck, resistance, breaking cycles" },
+  { name: "Justice", numeral: "XI", keywords: "fairness, truth, accountability", reversed: "dishonesty, unfairness, lack of accountability" },
+  { name: "The Hanged Man", numeral: "XII", keywords: "surrender, letting go, new perspective", reversed: "stalling, resistance, indecision" },
+  { name: "Death", numeral: "XIII", keywords: "transformation, endings, change", reversed: "resistance to change, stagnation, decay" },
+  { name: "Temperance", numeral: "XIV", keywords: "balance, moderation, patience", reversed: "excess, imbalance, lack of harmony" },
+  { name: "The Devil", numeral: "XV", keywords: "bondage, materialism, shadow self", reversed: "release, breaking free, reclaiming power" },
+  { name: "The Tower", numeral: "XVI", keywords: "upheaval, revelation, sudden change", reversed: "avoidance, fear of change, delayed disaster" },
+  { name: "The Star", numeral: "XVII", keywords: "hope, renewal, serenity", reversed: "despair, disconnection, lack of faith" },
+  { name: "The Moon", numeral: "XVIII", keywords: "illusion, fear, subconscious", reversed: "clarity, release of fear, truth revealed" },
+  { name: "The Sun", numeral: "XIX", keywords: "joy, success, vitality", reversed: "temporary sadness, lack of clarity, setbacks" },
+  { name: "Judgement", numeral: "XX", keywords: "rebirth, reckoning, absolution", reversed: "self-doubt, refusal of self-examination" },
+  { name: "The World", numeral: "XXI", keywords: "completion, integration, accomplishment", reversed: "incompletion, stagnation, lack of closure" },
+];
+
+const MINOR_SUITS = [
+  { suit: "Wands", element: "Fire", symbol: "🜂", domain: "passion, creativity, ambition" },
+  { suit: "Cups", element: "Water", symbol: "🜄", domain: "emotions, relationships, intuition" },
+  { suit: "Swords", element: "Air", symbol: "🜁", domain: "intellect, conflict, truth" },
+  { suit: "Pentacles", element: "Earth", symbol: "🜃", domain: "material, career, health" },
+];
+
+const MINOR_RANKS = ["Ace","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Page","Knight","Queen","King"];
+
+function buildFullDeck() {
+  const deck = MAJOR_ARCANA.map(c => ({ ...c, arcana: "major" }));
+  for (const s of MINOR_SUITS) {
+    for (const r of MINOR_RANKS) {
+      deck.push({
+        name: `${r} of ${s.suit}`,
+        suit: s.suit,
+        element: s.element,
+        symbol: s.symbol,
+        domain: s.domain,
+        arcana: "minor",
+      });
+    }
+  }
+  return deck;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const SPREADS = {
+  single: { name: "Single Card", count: 1, positions: ["Your Message"] },
+  three: { name: "Past · Present · Future", count: 3, positions: ["Past", "Present", "Future"] },
+  celtic: { name: "Celtic Cross", count: 5, positions: ["Present Situation", "Challenge", "Foundation", "Near Future", "Potential Outcome"] },
+};
+
+// Blackspore theme: dark forest, bioluminescent fungi, deep organic tones
+const CARD_ART = {
+  "The Fool": { glyph: "☉", bg: "linear-gradient(135deg, #3d5a1e 0%, #7a8b2e 100%)" },
+  "The Magician": { glyph: "∞", bg: "linear-gradient(135deg, #1a3a2a 0%, #2dd4a0 100%)" },
+  "The High Priestess": { glyph: "☽", bg: "linear-gradient(135deg, #0a1a12 0%, #1a4a3a 100%)" },
+  "The Empress": { glyph: "♀", bg: "linear-gradient(135deg, #1e3a1e 0%, #4a8a3a 100%)" },
+  "The Emperor": { glyph: "♂", bg: "linear-gradient(135deg, #2a1a0a 0%, #5a3a1a 100%)" },
+  "The Hierophant": { glyph: "☩", bg: "linear-gradient(135deg, #1a2a1a 0%, #3a5a2a 100%)" },
+  "The Lovers": { glyph: "♡", bg: "linear-gradient(135deg, #2a1a2a 0%, #6a3a5a 100%)" },
+  "The Chariot": { glyph: "⚡", bg: "linear-gradient(135deg, #0a2a1a 0%, #1aaa7a 100%)" },
+  "Strength": { glyph: "♌", bg: "linear-gradient(135deg, #3a2a0a 0%, #8a6a1a 100%)" },
+  "The Hermit": { glyph: "☆", bg: "linear-gradient(135deg, #0a0f0a 0%, #2a3a2a 100%)" },
+  "Wheel of Fortune": { glyph: "☸", bg: "linear-gradient(135deg, #1a2a1a 0%, #2aaa6a 50%, #4a6a2a 100%)" },
+  "Justice": { glyph: "⚖", bg: "linear-gradient(135deg, #0a2a2a 0%, #1a6a5a 100%)" },
+  "The Hanged Man": { glyph: "⊥", bg: "linear-gradient(135deg, #1a0a2a 0%, #2a3a4a 100%)" },
+  "Death": { glyph: "☠", bg: "linear-gradient(135deg, #050505 0%, #1a1a0a 100%)" },
+  "Temperance": { glyph: "△", bg: "linear-gradient(135deg, #1a3a2a 0%, #3aaa7a 100%)" },
+  "The Devil": { glyph: "⛧", bg: "linear-gradient(135deg, #0a0a0a 0%, #3a1a1a 100%)" },
+  "The Tower": { glyph: "↯", bg: "linear-gradient(135deg, #1a0a0a 0%, #5a2a1a 100%)" },
+  "The Star": { glyph: "✦", bg: "linear-gradient(135deg, #0a1a0a 0%, #1a5a3a 50%, #4affaa 100%)" },
+  "The Moon": { glyph: "☾", bg: "linear-gradient(135deg, #060d08 0%, #0a2a1a 50%, #1a4a2a 100%)" },
+  "The Sun": { glyph: "☀", bg: "linear-gradient(135deg, #3a5a1a 0%, #8aaa3a 100%)" },
+  "Judgement": { glyph: "𝄞", bg: "linear-gradient(135deg, #2a3a1a 0%, #4a6a2a 100%)" },
+  "The World": { glyph: "⊕", bg: "linear-gradient(135deg, #1a3a2a 0%, #2a8a5a 50%, #4aff9a 100%)" },
+};
+
+const SUIT_COLORS = {
+  Wands: "linear-gradient(135deg, #3a2a0a 0%, #6a4a1a 100%)",
+  Cups: "linear-gradient(135deg, #0a2a2a 0%, #1a5a5a 100%)",
+  Swords: "linear-gradient(135deg, #1a1a1a 0%, #3a4a3a 100%)",
+  Pentacles: "linear-gradient(135deg, #0a2a0a 0%, #1a5a2a 100%)",
+};
+
+const SUIT_GLYPHS = { Wands: "🜂", Cups: "🜄", Swords: "🜁", Pentacles: "🜃" };
+
+function getCardVisual(card) {
+  if (card.arcana === "major") {
+    return CARD_ART[card.name] || { glyph: "✧", bg: "linear-gradient(135deg, #0a1a0a, #1a3a2a)" };
+  }
+  return { glyph: SUIT_GLYPHS[card.suit] || "✧", bg: SUIT_COLORS[card.suit] };
+}
+
+// Floating spore particle component
+function Spores() {
+  return (
+    <>
+      {Array.from({ length: 50 }).map((_, i) => {
+        const size = 1 + Math.random() * 4;
+        const isGlowing = Math.random() > 0.6;
+        const left = Math.random() * 100;
+        const animDuration = 8 + Math.random() * 16;
+        const animDelay = Math.random() * 10;
+        const drift = -30 + Math.random() * 60;
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: `${left}%`,
+              bottom: `-${10 + Math.random() * 20}px`,
+              width: size,
+              height: size,
+              borderRadius: "50%",
+              background: isGlowing
+                ? `radial-gradient(circle, rgba(74,255,140,0.8) 0%, rgba(74,255,140,0) 70%)`
+                : `radial-gradient(circle, rgba(140,160,120,0.4) 0%, rgba(140,160,120,0) 70%)`,
+              boxShadow: isGlowing ? `0 0 ${size * 2}px rgba(74,255,140,0.3)` : "none",
+              animation: `sporeFloat ${animDuration}s ${animDelay}s infinite linear`,
+              opacity: 0,
+              pointerEvents: "none",
+              ["--drift"]: `${drift}px`,
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+function TarotCard({ card, reversed, revealed, onClick, position, delay = 0 }) {
+  const visual = getCardVisual(card);
+  const [flipped, setFlipped] = useState(false);
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setEntered(true), delay);
+    return () => clearTimeout(t1);
+  }, [delay]);
+
+  useEffect(() => {
+    if (revealed && !flipped) {
+      const t = setTimeout(() => setFlipped(true), delay + 400);
+      return () => clearTimeout(t);
+    }
+  }, [revealed, delay]);
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        perspective: "800px",
+        width: 160, height: 240,
+        cursor: onClick ? "pointer" : "default",
+        opacity: entered ? 1 : 0,
+        transform: entered ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 0.6s ease, transform 0.6s ease",
+      }}
+    >
+      {position && (
+        <div style={{
+          textAlign: "center", fontSize: 11, letterSpacing: 2,
+          color: "#5a7a4a", marginBottom: 8, fontFamily: "'Cormorant Garamond', serif",
+          textTransform: "uppercase", fontWeight: 600,
+        }}>{position}</div>
+      )}
+      <div style={{
+        width: "100%", height: "100%", position: "relative",
+        transformStyle: "preserve-3d",
+        transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        transition: "transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+      }}>
+        {/* Back — dark forest bark texture */}
+        <div style={{
+          position: "absolute", inset: 0, backfaceVisibility: "hidden",
+          borderRadius: 12, overflow: "hidden",
+          background: "linear-gradient(160deg, #0a0e08 0%, #0d1a0f 40%, #0a0f0a 100%)",
+          border: "1px solid #1a2a18",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(74,255,140,0.03)",
+        }}>
+          <div style={{ position: "absolute", inset: 8, border: "1px solid #1a2a18", borderRadius: 8 }} />
+          {/* Spore pattern on card back */}
+          <div style={{
+            position: "absolute", inset: 0, borderRadius: 12,
+            background: `radial-gradient(circle at 30% 40%, rgba(74,255,140,0.03) 0%, transparent 50%),
+                         radial-gradient(circle at 70% 60%, rgba(74,255,140,0.02) 0%, transparent 40%),
+                         radial-gradient(circle at 50% 80%, rgba(74,255,140,0.03) 0%, transparent 30%)`,
+          }} />
+          <div style={{
+            fontSize: 48, color: "#2a4a2a", opacity: 0.6,
+            animation: onClick ? "sporePulse 3s infinite" : "none",
+            textShadow: "0 0 20px rgba(74,255,140,0.2)",
+          }}>✧</div>
+          {/* Organic vein pattern */}
+          <div style={{
+            position: "absolute", inset: 0, borderRadius: 12, opacity: 0.08,
+            background: `repeating-conic-gradient(#1a3a1a33 0% 25%, transparent 0% 50%) 0 0 / 24px 24px`,
+          }} />
+        </div>
+        {/* Front */}
+        <div style={{
+          position: "absolute", inset: 0, backfaceVisibility: "hidden",
+          transform: "rotateY(180deg)", borderRadius: 12, overflow: "hidden",
+          background: visual.bg, border: "1px solid rgba(74,255,140,0.15)",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(74,255,140,0.05)",
+          padding: 12,
+        }}>
+          <div style={{ position: "absolute", inset: 6, border: "1px solid rgba(74,255,140,0.08)", borderRadius: 8 }} />
+          {card.arcana === "major" && (
+            <div style={{
+              fontSize: 10, letterSpacing: 3, color: "rgba(200,230,200,0.5)",
+              fontFamily: "'Cormorant Garamond', serif", textTransform: "uppercase",
+              marginBottom: 4,
+            }}>{card.numeral}</div>
+          )}
+          <div style={{
+            fontSize: 56, lineHeight: 1,
+            filter: "drop-shadow(0 2px 12px rgba(74,255,140,0.2))",
+            transform: reversed ? "rotate(180deg)" : "none",
+            transition: "transform 0.3s",
+          }}>{visual.glyph}</div>
+          <div style={{
+            fontSize: 12, fontWeight: 700, color: "#d4e8c8",
+            textAlign: "center", marginTop: 8,
+            fontFamily: "'Cormorant Garamond', serif",
+            letterSpacing: 1, textTransform: "uppercase",
+            textShadow: "0 1px 6px rgba(0,0,0,0.5)",
+          }}>{card.name}</div>
+          {reversed && (
+            <div style={{
+              fontSize: 9, color: "rgba(200,230,200,0.6)",
+              marginTop: 4, fontStyle: "italic",
+              fontFamily: "'Cormorant Garamond', serif",
+            }}>Reversed</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TypingText({ text }) {
+  const [displayed, setDisplayed] = useState("");
+  const idx = useRef(0);
+
+  useEffect(() => {
+    setDisplayed("");
+    idx.current = 0;
+    const interval = setInterval(() => {
+      if (idx.current < text.length) {
+        setDisplayed(text.slice(0, idx.current + 1));
+        idx.current++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 15);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{displayed}<span style={{ opacity: displayed.length < text.length ? 1 : 0, transition: "opacity 0.3s", color: "#4aff8c" }}>▍</span></span>;
+}
+
+export default function TarotReading() {
+  const [phase, setPhase] = useState("welcome");
+  const [question, setQuestion] = useState("");
+  const [spread, setSpread] = useState("three");
+  const [drawnCards, setDrawnCards] = useState([]);
+  const [reversals, setReversals] = useState([]);
+  const [revealed, setRevealed] = useState(false);
+  const [reading, setReading] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const readingRef = useRef(null);
+
+  const drawCards = () => {
+    const deck = shuffle(buildFullDeck());
+    const count = SPREADS[spread].count;
+    const cards = deck.slice(0, count);
+    const revs = cards.map(() => Math.random() < 0.3);
+    setDrawnCards(cards);
+    setReversals(revs);
+    setRevealed(false);
+    setReading("");
+    setError(null);
+    setPhase("cards");
+    setTimeout(() => setRevealed(true), 800);
+    setTimeout(() => getReading(cards, revs), 2000);
+  };
+
+  const getReading = async (cards, revs) => {
+    setLoading(true);
+    const spreadInfo = SPREADS[spread];
+    const cardDescriptions = cards.map((c, i) => {
+      const pos = spreadInfo.positions[i];
+      const rev = revs[i];
+      let desc = `Position "${pos}": ${c.name}`;
+      if (rev) desc += " (Reversed)";
+      if (c.arcana === "major") {
+        desc += ` — Upright: ${c.keywords}`;
+        if (c.reversed) desc += `; Reversed: ${c.reversed}`;
+      } else {
+        desc += ` — Suit of ${c.suit} (${c.element}/${c.domain})`;
+      }
+      return desc;
+    }).join("\n");
+
+    const prompt = `You are a wise, intuitive tarot reader with deep knowledge of the Rider-Waite tradition. The querent has asked: "${question || 'No specific question — provide general guidance.'}"
+
+Spread: ${spreadInfo.name}
+Cards drawn:
+${cardDescriptions}
+
+Provide a rich, insightful reading. For each card:
+1. Briefly describe the card's energy and symbolism in this position
+2. Connect it to the querent's question or life situation
+
+Then weave all cards together into a cohesive narrative with practical wisdom. Be warm, encouraging, and authentic — not generic. Speak directly to the querent using "you." Keep it around 300-400 words. Don't use markdown headers or bullets — write in flowing prose paragraphs.`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      const data = await response.json();
+      const text = data.content?.map(b => b.text || "").join("") || "The cards remain silent for now. Please try again.";
+      setReading(text);
+    } catch (err) {
+      setError("The forest grows silent. The spirits withdraw. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const reset = () => {
+    setPhase("welcome");
+    setQuestion("");
+    setDrawnCards([]);
+    setReversals([]);
+    setRevealed(false);
+    setReading("");
+    setError(null);
+  };
+
+  useEffect(() => {
+    if (reading && readingRef.current) {
+      readingRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [reading]);
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "radial-gradient(ellipse at 50% 0%, #0d1a0f 0%, #060a06 50%, #030503 100%)",
+      color: "#c8d4b8",
+      fontFamily: "'Cormorant Garamond', Georgia, serif",
+      position: "relative", overflow: "hidden",
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+      <style>{`
+        @keyframes sporePulse { 0%,100% { opacity: 0.4; text-shadow: 0 0 20px rgba(74,255,140,0.1); } 50% { opacity: 1; text-shadow: 0 0 30px rgba(74,255,140,0.4); } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes sporeFloat {
+          0% { opacity: 0; transform: translateY(0) translateX(0); }
+          10% { opacity: 0.8; }
+          90% { opacity: 0.2; }
+          100% { opacity: 0; transform: translateY(-100vh) translateX(var(--drift, 20px)); }
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glowPulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+        input::placeholder { color: #3a4a3a; }
+        input:focus { outline: none; border-color: #2a5a3a !important; box-shadow: 0 0 20px rgba(74,255,140,0.08); }
+        textarea::placeholder { color: #3a4a3a; }
+        textarea:focus { outline: none; border-color: #2a5a3a !important; box-shadow: 0 0 20px rgba(74,255,140,0.08); }
+      `}</style>
+
+      {/* Ambient forest glow layers */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: `radial-gradient(ellipse at 20% 80%, rgba(74,255,140,0.02) 0%, transparent 50%),
+                     radial-gradient(ellipse at 80% 20%, rgba(74,255,140,0.015) 0%, transparent 40%),
+                     radial-gradient(ellipse at 50% 100%, rgba(40,80,40,0.04) 0%, transparent 30%)`,
+      }} />
+
+      {/* Floating spores */}
+      <Spores />
+
+      {/* Subtle ground fog */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, height: "15vh",
+        background: "linear-gradient(to top, rgba(10,20,10,0.4) 0%, transparent 100%)",
+        pointerEvents: "none", zIndex: 0,
+      }} />
+
+      {/* Header */}
+      <div style={{
+        textAlign: "center", padding: "40px 20px 20px",
+        position: "relative", zIndex: 1,
+      }}>
+        <div style={{
+          fontSize: 11, letterSpacing: 6, color: "#3a5a3a",
+          textTransform: "uppercase", marginBottom: 8,
+          fontFamily: "'Cinzel', serif",
+        }}>⟡ blackspore.com ⟡</div>
+        <h1 style={{
+          fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 300, margin: 0,
+          fontFamily: "'Cinzel', serif",
+          background: "linear-gradient(135deg, #6aaa5a 0%, #4aff8c 40%, #2a8a4a 100%)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          letterSpacing: 3,
+          filter: "drop-shadow(0 0 20px rgba(74,255,140,0.15))",
+        }}>Tarot Reading</h1>
+        <div style={{
+          width: 60, height: 1,
+          background: "linear-gradient(90deg, transparent, #2a5a3a, transparent)",
+          margin: "16px auto",
+        }} />
+      </div>
+
+      {/* Welcome Phase */}
+      {phase === "welcome" && (
+        <div style={{
+          maxWidth: 520, margin: "0 auto", padding: "20px 24px 60px",
+          animation: "fadeInUp 0.8s ease", position: "relative", zIndex: 1,
+        }}>
+          <p style={{
+            textAlign: "center", fontSize: 16, color: "#5a7a5a",
+            lineHeight: 1.8, fontWeight: 300, fontStyle: "italic",
+            marginBottom: 40,
+          }}>
+            Step into the grove. The ancient spores carry whispers of what awaits.
+          </p>
+
+          <div style={{ marginBottom: 28 }}>
+            <label style={{
+              display: "block", fontSize: 11, letterSpacing: 3,
+              color: "#3a5a3a", textTransform: "uppercase", marginBottom: 10,
+              fontFamily: "'Cinzel', serif",
+            }}>Your Question</label>
+            <textarea
+              value={question}
+              onChange={e => setQuestion(e.target.value)}
+              placeholder="What guidance do you seek? (optional)"
+              rows={3}
+              style={{
+                width: "100%", boxSizing: "border-box", padding: "14px 16px",
+                background: "rgba(10,20,10,0.5)",
+                border: "1px solid #1a2a18",
+                borderRadius: 8, color: "#c8d4b8", fontSize: 15,
+                fontFamily: "'Cormorant Garamond', serif",
+                lineHeight: 1.6, resize: "none",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 36 }}>
+            <label style={{
+              display: "block", fontSize: 11, letterSpacing: 3,
+              color: "#3a5a3a", textTransform: "uppercase", marginBottom: 12,
+              fontFamily: "'Cinzel', serif",
+            }}>Choose Your Spread</label>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {Object.entries(SPREADS).map(([key, s]) => (
+                <button
+                  key={key}
+                  onClick={() => setSpread(key)}
+                  style={{
+                    flex: 1, minWidth: 140, padding: "14px 12px",
+                    background: spread === key ? "rgba(74,255,140,0.06)" : "rgba(10,20,10,0.4)",
+                    border: `1px solid ${spread === key ? "#2a5a3a" : "#1a2a18"}`,
+                    borderRadius: 8, color: spread === key ? "#6aaa6a" : "#3a5a3a",
+                    cursor: "pointer", fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: 14, fontWeight: 600, transition: "all 0.3s",
+                    letterSpacing: 1,
+                    boxShadow: spread === key ? "0 0 15px rgba(74,255,140,0.05)" : "none",
+                  }}
+                >
+                  {s.name}
+                  <div style={{ fontSize: 11, fontWeight: 300, marginTop: 4, opacity: 0.6 }}>
+                    {s.count} card{s.count > 1 ? "s" : ""}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={drawCards}
+            style={{
+              display: "block", width: "100%", padding: "16px 32px",
+              background: "linear-gradient(135deg, #0a2a1a 0%, #1a4a2a 100%)",
+              border: "1px solid #2a5a3a",
+              borderRadius: 10, color: "#4aff8c", fontSize: 16,
+              fontFamily: "'Cinzel', serif", fontWeight: 600,
+              letterSpacing: 3, textTransform: "uppercase",
+              cursor: "pointer", transition: "all 0.3s",
+              boxShadow: "0 4px 20px rgba(74,255,140,0.08), inset 0 1px 0 rgba(74,255,140,0.05)",
+              textShadow: "0 0 20px rgba(74,255,140,0.3)",
+            }}
+            onMouseOver={e => {
+              e.target.style.boxShadow = "0 8px 32px rgba(74,255,140,0.15), inset 0 1px 0 rgba(74,255,140,0.1)";
+              e.target.style.borderColor = "#4aff8c";
+            }}
+            onMouseOut={e => {
+              e.target.style.boxShadow = "0 4px 20px rgba(74,255,140,0.08), inset 0 1px 0 rgba(74,255,140,0.05)";
+              e.target.style.borderColor = "#2a5a3a";
+            }}
+          >
+            ⟡ Draw the Cards ⟡
+          </button>
+        </div>
+      )}
+
+      {/* Cards Phase */}
+      {phase === "cards" && (
+        <div style={{
+          maxWidth: 960, margin: "0 auto", padding: "20px 24px 60px",
+          position: "relative", zIndex: 1,
+        }}>
+          {question && (
+            <p style={{
+              textAlign: "center", fontSize: 15, color: "#5a7a5a",
+              fontStyle: "italic", marginBottom: 32, fontWeight: 300,
+            }}>
+              "{question}"
+            </p>
+          )}
+
+          <div style={{
+            display: "flex", justifyContent: "center", gap: 24,
+            flexWrap: "wrap", marginBottom: 48,
+          }}>
+            {drawnCards.map((card, i) => (
+              <TarotCard
+                key={i}
+                card={card}
+                reversed={reversals[i]}
+                revealed={revealed}
+                position={SPREADS[spread].positions[i]}
+                delay={i * 200}
+              />
+            ))}
+          </div>
+
+          {/* Reading */}
+          <div ref={readingRef} style={{
+            maxWidth: 640, margin: "0 auto",
+          }}>
+            {loading && !reading && (
+              <div style={{
+                textAlign: "center", padding: 40,
+                animation: "fadeInUp 0.6s ease",
+              }}>
+                <div style={{
+                  fontSize: 32, animation: "float 2s infinite",
+                  marginBottom: 16, color: "#4aff8c",
+                  textShadow: "0 0 20px rgba(74,255,140,0.3)",
+                }}>⟡</div>
+                <p style={{ color: "#3a5a3a", fontSize: 14, fontStyle: "italic" }}>
+                  The spores drift through the dark…
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div style={{
+                textAlign: "center", padding: 32,
+                color: "#7a4a4a", fontStyle: "italic",
+              }}>{error}</div>
+            )}
+
+            {reading && (
+              <div style={{
+                animation: "fadeInUp 0.8s ease",
+                background: "rgba(10,20,10,0.5)",
+                border: "1px solid #1a2a18",
+                borderRadius: 12, padding: "32px 28px",
+                boxShadow: "0 0 30px rgba(74,255,140,0.03)",
+              }}>
+                <div style={{
+                  textAlign: "center", fontSize: 11, letterSpacing: 4,
+                  color: "#3a5a3a", textTransform: "uppercase",
+                  fontFamily: "'Cinzel', serif", marginBottom: 24,
+                }}>Your Reading</div>
+                <div style={{
+                  fontSize: 16, lineHeight: 1.9, color: "#a8b898",
+                  fontWeight: 300, whiteSpace: "pre-wrap",
+                }}>
+                  <TypingText text={reading} />
+                </div>
+              </div>
+            )}
+
+            {(reading || error) && (
+              <div style={{ textAlign: "center", marginTop: 40 }}>
+                <button
+                  onClick={reset}
+                  style={{
+                    padding: "12px 32px",
+                    background: "transparent",
+                    border: "1px solid #1a2a18",
+                    borderRadius: 8, color: "#3a5a3a",
+                    fontSize: 13, fontFamily: "'Cinzel', serif",
+                    letterSpacing: 2, textTransform: "uppercase",
+                    cursor: "pointer", transition: "all 0.3s",
+                  }}
+                  onMouseOver={e => { e.target.style.borderColor = "#2a5a3a"; e.target.style.color = "#4aff8c"; e.target.style.textShadow = "0 0 10px rgba(74,255,140,0.2)"; }}
+                  onMouseOut={e => { e.target.style.borderColor = "#1a2a18"; e.target.style.color = "#3a5a3a"; e.target.style.textShadow = "none"; }}
+                >
+                  Return to the Grove
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{
+        textAlign: "center", padding: "20px 0 32px",
+        fontSize: 11, color: "#1a2a18", letterSpacing: 2,
+        fontFamily: "'Cinzel', serif",
+        position: "relative", zIndex: 1,
+      }}>
+        For entertainment & reflection · Not a substitute for professional advice
+      </div>
+    </div>
+  );
+}
