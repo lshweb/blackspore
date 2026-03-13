@@ -924,9 +924,17 @@
       const readingRef = useRef(null);
 
       const drawCards = () => {
-        const deck = shuffle(buildFullDeck());
+        const fullDeck = buildFullDeck();
+        const shuffled = shuffle(fullDeck);
         const count = SPREADS[spread].count;
-        const cards = deck.slice(0, count);
+        let cards = shuffled.slice(0, count);
+        // Guarantee at least one Major Arcana card
+        const hasMajor = cards.some(c => c.arcana === "major");
+        if (!hasMajor) {
+          const majors = shuffle(fullDeck.filter(c => c.arcana === "major"));
+          const replaceIdx = Math.floor(Math.random() * count);
+          cards[replaceIdx] = majors[0];
+        }
         const revs = cards.map(() => Math.random() < 0.3);
         setDrawnCards(cards);
         setReversals(revs);
